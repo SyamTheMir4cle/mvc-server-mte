@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
     fullName: String,
     role: {
         type: String,
-        enum: ['owner', 'director', 'asset_admin', 'supervisor', 'worker', 'finance'],
+        enum: ['owner', 'director', 'asset_admin', 'supervisor', 'worker'],
         default: 'worker'
     },
     assignedProject: String,
