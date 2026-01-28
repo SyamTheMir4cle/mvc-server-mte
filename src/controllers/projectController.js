@@ -2,45 +2,78 @@ const Project = require('../models/Project');
 const DailyReport = require('../models/DailyReport');
 
 // 1. Create Project
+// 1. Create Project
 exports.createProject = async (req, res) => {
     if (!['owner', 'director', 'admin'].includes(req.user.role)) {
         return res.status(403).json({ msg: 'Akses Ditolak' });
     }
 
     try {
-        const { nama, lokasi, budget, startDate, endDate, workItems, status } = req.body;
-
-        const docs = {};
-        if (req.files) {
-            if (req.files.perencanaan?.[0]) docs.perencanaan = `/uploads/${req.files.perencanaan[0].filename}`;
-            if (req.files.rab?.[0]) docs.rab = `/uploads/${req.files.rab[0].filename}`;
-            if (req.files.gambarKerja?.[0]) docs.gambarKerja = `/uploads/${req.files.gambarKerja[0].filename}`;
-            if (req.files.rencanaMaterial?.[0]) docs.rencanaMaterial = `/uploads/${req.files.rencanaMaterial[0].filename}`;
-            if (req.files.rencanaAlat?.[0]) docs.rencanaAlat = `/uploads/${req.files.rencanaAlat[0].filename}`;
-        }
-
-        let parsedWorkItems = [];
-        if (workItems) {
+        // --- DATA PARSING ---
+        // Frontend sends: formData.append('data', JSON.stringify(projectData))
+        // Files are sent with keys: shopDrawing, hse, etc.
+        
+        let projectData = {};
+        if (req.body.data) {
             try {
-                parsedWorkItems = JSON.parse(workItems);
-            } catch (e) { console.error("Parse error workItems", e); }
+                projectData = JSON.parse(req.body.data);
+            } catch (e) {
+                return res.status(400).json({ msg: 'Invalid JSON Data' });
+            }
+        } else {
+             // Fallback for Postman/legacy tests (raw fields)
+             projectData = req.body;
         }
 
+        const { name, lokasi, totalBudget, globalDates, supplies, workItems, description } = projectData;
+
+        // --- FILE MAPPING ---
+        const docs = { ...projectData.documents }; // Keep existing structure if passed
+        
+        if (req.files) {
+            // Map uploaded files to schema keys
+            const mapFile = (key) => {
+                if (req.files[key]?.[0]) return `/uploads/${req.files[key][0].filename}`;
+                return null;
+            };
+
+            if (req.files['shopDrawing']) docs.shopDrawing = mapFile('shopDrawing');
+            if (req.files['hse']) docs.hse = mapFile('hse');
+            if (req.files['manPowerList']) docs.manPowerList = mapFile('manPowerList');
+            if (req.files['workItemsList']) docs.workItemsList = mapFile('workItemsList');
+            if (req.files['materialList']) docs.materialList = mapFile('materialList');
+            if (req.files['toolsList']) docs.toolsList = mapFile('toolsList');
+            
+            // Legacy Support
+            if (req.files['perencanaan']) docs.perencanaan = mapFile('perencanaan');
+        }
+
+        // --- CREATE PROJECT ---
         const project = await Project.create({
-            nama,
-            lokasi,
-            budget: budget ? Number(budget) : 0,
-            startDate: startDate || new Date(),
-            endDate: endDate || new Date(new Date().setDate(new Date().getDate() + 30)),
-            status: status || 'Planning',
-            workItems: parsedWorkItems,
+            nama: name, // Frontend sends 'name', DB uses 'nama'
+            lokasi: projectData.location || lokasi, // Frontend sends 'location', DB uses 'lokasi'
+            description,
+            totalBudget: Number(totalBudget) || 0,
+            
+            globalDates: globalDates || { 
+                planned: { start: new Date(), end: new Date() }, 
+                actual: { start: null, end: null } 
+            },
+            
+            startDate: globalDates?.planned?.start ? new Date(globalDates.planned.start) : new Date(),
+            endDate: globalDates?.planned?.end ? new Date(globalDates.planned.end) : new Date(),
+            
+            supplies: supplies || [],
+            workItems: workItems || [],
             documents: docs,
+            
+            status: 'Planning',
             createdBy: req.user.id
         });
 
         res.json(project);
     } catch (e) {
-        console.error(e);
+        console.error("Create Project Error:", e);
         res.status(500).json({ error: e.message });
     }
 };

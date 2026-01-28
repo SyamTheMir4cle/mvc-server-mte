@@ -8,6 +8,15 @@ router.use(verifyToken);
 
 // Konfigurasi Upload File Project
 const projectUploads = upload.fields([
+    // New Fields
+    { name: 'shopDrawing', maxCount: 1 },
+    { name: 'hse', maxCount: 1 },
+    { name: 'manPowerList', maxCount: 1 },
+    { name: 'workItemsList', maxCount: 1 },
+    { name: 'materialList', maxCount: 1 },
+    { name: 'toolsList', maxCount: 1 },
+
+    // Legacy Fields (Keep for backward compatibility)
     { name: 'perencanaan', maxCount: 1 },
     { name: 'rab', maxCount: 1 },
     { name: 'gambarKerja', maxCount: 1 },
