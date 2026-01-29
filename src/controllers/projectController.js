@@ -125,17 +125,28 @@ exports.deleteProject = async (req, res) => {
 exports.createDailyUpdate = async (req, res) => {
     try {
         const projectId = req.params.id;
+
+        // Validation: Catch "undefined" string or missing ID
+        if (!projectId || projectId === 'undefined') {
+            return res.status(400).json({ 
+                msg: 'Project ID is missing from the request URL' 
+            });
+        }
+
         let updateData = {};
         if (req.body.data) {
-            try { updateData = JSON.parse(req.body.data); } 
-            catch (e) { return res.status(400).json({ msg: 'Format Data Salah' }); }
+            try { 
+                updateData = JSON.parse(req.body.data); 
+            } catch (e) { 
+                return res.status(400).json({ msg: 'Format Data Salah' }); 
+            }
         }
 
         let fotoPath = null;
         if (req.file) fotoPath = `/uploads/${req.file.filename}`;
 
         const report = await DailyReport.create({
-            projectId,
+            projectId, // This will now fail gracefully if projectId is invalid
             date: updateData.date || new Date(),
             workProgress: updateData.workProgress,
             workforce: updateData.workforce,
