@@ -3,21 +3,21 @@ const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 // Import Models
-const User = require('./src/models/User');
-const Project = require('./src/models/Project');
-const Inventory = require('./src/models/Inventory');
-const Request = require('./src/models/Request');
-const Attendance = require('./src/models/Attendance');
-const DailyReport = require('./src/models/DailyReport');
-const ToolLog = require('./src/models/ToolLog');
-const ToolRequest = require('./src/models/ToolRequest');
-const ToolUsage = require('./src/models/ToolUsage');
-const ProjectTool = require('./src/models/ProjectTool');
+const User = require('../src/models/User');
+const Project = require('../src/models/Project');
+const Inventory = require('../src/models/Inventory');
+const Request = require('../src/models/Request');
+const Attendance = require('../src/models/Attendance');
+const DailyReport = require('../src/models/DailyReport');
+const ToolLog = require('../src/models/ToolLog');
+const ToolRequest = require('../src/models/ToolRequest');
+const ToolUsage = require('../src/models/ToolUsage');
+const ProjectTool = require('../src/models/ProjectTool');
 
 // Connect to MongoDB
 const connectDB = async () => {
     try {
-        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/mte-server');
+        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/mterp_db');
         console.log('✓ Connected to MongoDB');
     } catch (error) {
         console.error('✗ Failed to connect to MongoDB:', error.message);
